@@ -1,65 +1,84 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <numeric>
+#include <fstream>
 
 using namespace std;
 
-// هيكل بيانات لتمثيل المصروف الواحد
 struct Expense {
     string description;
     double amount;
     string category;
 };
 
-// دالة لإضافة مصروف جديد
+void saveToFile(const vector<Expense>& expenses) {
+    ofstream outFile("expenses.txt");
+    if (!outFile) {
+        cout << "Error: Could not open file for saving data.\n";
+        return;
+    }
+    for (const auto& e : expenses) {
+        outFile << e.description << "," << e.amount << "," << e.category << "\n";
+    }
+    outFile.close();
+}
+
+void loadFromFile(vector<Expense>& expenses) {
+    ifstream inFile("expenses.txt");
+    if (!inFile) {
+        return;
+    }
+    Expense e;
+    string amountStr;
+    while (getline(inFile, e.description, ',') && 
+           getline(inFile, amountStr, ',') && 
+           getline(inFile, e.category)) {
+        e.amount = stod(amountStr);
+        expenses.push_back(e);
+    }
+    inFile.close();
+}
+
 void addExpense(vector<Expense>& expenses) {
     Expense e;
-    cout << "\n--- إضافة مصروف جديد ---\n";
-    cout << "أدخل وصف المصروف (مثل: عشاء، مواصلات): ";
+    cout << "\n--- Add New Expense ---\n";
+    cout << "Enter description: ";
     cin.ignore();
     getline(cin, e.description);
     
-    cout << "أدخل المبلغ: ";
+    cout << "Enter amount: ";
     cin >> e.amount;
     
-    cout << "أدخل الفئة (مثل: طعام، ترفيه، فواتير): ";
+    cout << "Enter category: ";
     cin.ignore();
     getline(cin, e.category);
     
     expenses.push_back(e);
-    cout << "تمت إضافة المصروف بنجاح!\n\n";
+    saveToFile(expenses);
+    cout << "Expense added and saved successfully!\n\n";
 }
 
-// دالة لعرض جميع المصروفات المضافة
 void displayExpenses(const vector<Expense>& expenses) {
     if (expenses.empty()) {
-        cout << "\nلا توجد مصروفات مسجلة حتى الآن.\n\n";
+        cout << "\nNo expenses tracked yet.\n\n";
         return;
     }
-    
-    cout << "\n---------------- قائمة المصروفات ----------------\n";
+    cout << "\n---------------- Expense List ----------------\n";
     for (size_t i = 0; i < expenses.size(); ++i) {
-        cout << i + 1 << ". الوصف: " << expenses[i].description 
-             << " | المبلغ: " << expenses[i].amount 
-             << " | الفئة: " << expenses[i].category << "\n";
+        cout << i + 1 << ". Description: " << expenses[i].description 
+             << " | Amount: " << expenses[i].amount 
+             << " | Category: " << expenses[i].category << "\n";
     }
-    cout << "------------------------------------------------\n\n";
+    cout << "----------------------------------------------\n\n";
 }
 
-// دالة لحساب إجمالي المصروفات
 void showTotalExpenses(const vector<Expense>& expenses) {
-    if (expenses.empty()) {
-        cout << "\nإجمالي المصروفات الحالي هو: 0.0\n\n";
-        return;
-    }
-    
     double total = 0;
     for (const auto& e : expenses) {
         total += e.amount;
     }
     cout << "\n========================================\n";
-    cout << " إجمالي المصروفات الكلي هو: " << total << "\n";
+    cout << " Total Expenses: " << total << "\n";
     cout << "========================================\n\n";
 }
 
@@ -67,18 +86,15 @@ int main() {
     vector<Expense> expenses;
     int choice;
 
-    // تغيير ترميز الكونسول لدعم اللغة العربية في ويندوز إن أمكن
-    #ifdef _WIN32
-    system("chcp 65001 > nul");
-    #endif
+    loadFromFile(expenses);
 
     while (true) {
-        cout << "--- نظام متابعة المصروفات (Expense Tracker) ---\n";
-        cout << "1. إضافة مصروف جديد\n";
-        cout << "2. عرض جميع المصروفات\n";
-        cout << "3. حساب إجمالي المصروفات\n";
-        cout << "4. الخروج من البرنامج\n";
-        cout << "اختر رقم العملية: ";
+        cout << "=== Expense Tracker System ===\n";
+        cout << "1. Add Expense\n";
+        cout << "2. Display All Expenses\n";
+        cout << "3. Calculate Total Expenses\n";
+        cout << "4. Exit\n";
+        cout << "Enter choice: ";
         cin >> choice;
 
         if (choice == 1) {
@@ -88,11 +104,13 @@ int main() {
         } else if (choice == 3) {
             showTotalExpenses(expenses);
         } else if (choice == 4) {
-            cout << "شكراً لاستخدامك البرنامج. إلى اللقاء!\n";
+            cout << "Data saved. Exiting program...\n";
             break;
         } else {
-            cout << "اختيار غير صحيح، يرجى المحاولة مجدداً.\n\n";
+            cout << "Invalid choice. Try again.\n\n";
         }
     }
     return 0;
-}
+} 
+    
+    
